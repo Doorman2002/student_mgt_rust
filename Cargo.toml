@@ -1,0 +1,20 @@
+[package]
+name = "school"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-cors = "0.7.1"
+actix-web = "4.14.0"
+bcrypt = "0.19.2"
+
+chrono = "0.4.45"
+cookie = "0.18.1"
+dotenvy = "0.15.7"
+lettre = { version = "0.11.22", default-features = false, features = ["builder", "rustls-tls", "smtp-transport"] }
+lettre_email = "0.9.4"
+rand = "0.10.2"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.15"
+sqlx = { version = "0.9.0", features = ["chrono", "postgres", "runtime-tokio", "tls-rustls", "uuid"] }
+uuid = { version = "1.23.4", features = ["v4"] }

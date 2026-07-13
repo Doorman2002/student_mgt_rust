@@ -18,6 +18,7 @@ async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
     let mail_user=std::env::var("mail_username").expect("unable to get the username");
     let mail_pass=std::env::var("mail_password").expect("Unable to get the password");
+    let mail_from=std::env::var("mail_from").expect("unable to get the from address");
     let cred_info=Credentials::new(mail_user,mail_pass);
     let cred=Credential{info:cred_info.clone()};
     let mailer=SmtpTransport::relay("smtp.gmail.com")
@@ -46,6 +47,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(mailer.clone()))
             .app_data(web::Data::new(cred.clone()))
             .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(mail_from.clone()))
             .wrap(cors_headers)
             .route("/", web::get().to(hello))
             .route("/auth/signup",web::post().to(route::student::student_signup))

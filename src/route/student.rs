@@ -18,6 +18,7 @@ pub async fn student_signup(
     pool: web::Data<PgPool>,
     _cred: web::Data<Credential>,
     mailer: web::Data<SmtpTransport>,
+    mail_from: web::Data<String>,
 ) -> impl Responder {
     println!("The Backend for the student ");
     let name = form.name.clone();
@@ -99,25 +100,29 @@ pub async fn student_signup(
     match insert_result {
         Ok(val) => {
             let msg = Message::builder()
-                .from("School <okorieonyekachi003@gmail.com>".parse().unwrap())
+                .from(mail_from.as_str().parse().unwrap())
                 .to(val.get::<String, _>("email").parse().unwrap())
                 .subject("Verify Your Email Address")
                 .body(format!("Your OTP is: {}", otp))
                 .unwrap();
-
+            let value=msg.clone();
             let mail_cxt = mailer.get_ref().clone();
-            let send_mail = web::block(move || mail_cxt.send(&msg)).await;
+            let send_mail = web::block(move || mail_cxt.send(&value)).await;
+            // print!("{:?}",msg.clone());
             match send_mail {
-                Ok(_) => {}
+                Ok(_) => {
+                    return     HttpResponse::Ok().json(serde_json::json!({
+                "info": "Signup successful. Please verify your email.",
+                "email":&email
+            }))
+                }
                 Err(err) => {
                     return HttpResponse::BadRequest().json(serde_json::json!({
                         "info": format!("{}", err)
                     }));
                 }
             }
-            HttpResponse::Ok().json(serde_json::json!({
-                "info": "Signup successful. Please verify your email."
-            }))
+        
         }
         Err(err) => HttpResponse::InternalServerError().json(serde_json::json!({
             "info": "Failed to save student",
@@ -133,19 +138,21 @@ pub async fn verify_email(
 ) -> impl Responder {
     let email = &mail.email;
     let otp = form.otp.clone();
-
-    let result = sqlx::query(
+    println!("{}",email);
+    let result = sqlx::query!(
         "SELECT email_verify, email_otp_createdAT FROM student WHERE email = $1",
+        email
     )
-    .bind(email)
+    
     .fetch_optional(pool.get_ref())
     .await;
 
     match result {
         Ok(Some(row)) => {
-            let stored_otp: String = row.get("email_verify");
+            let stored_otp: String = row.email_verify.unwrap();
+            // let otp_time=row.get("email_otp_createdAt")
             let created_at: Option<chrono::DateTime<chrono::Utc>> =
-                row.get("email_otp_createdAT");
+                row.email_otp_createdat;
 
             if stored_otp != otp {
                 return HttpResponse::BadRequest().json(serde_json::json!({
@@ -274,7 +281,7 @@ pub async fn login(
     }
 }
 
-pub async fn get_email(form:web::Json<EmailInfo>,pool:web::Data<PgPool>,mail:web::Data<SmtpTransport>)->impl Responder{
+pub async fn get_email(form:web::Json<EmailInfo>,pool:web::Data<PgPool>,mail:web::Data<SmtpTransport>,mail_from:web::Data<String>)->impl Responder{
     let info=form.into_inner();
     let email=info.email.clone();
     let result=sqlx::query!("SELECT email FROM student WHERE email=$1",email)
@@ -292,7 +299,7 @@ pub async fn get_email(form:web::Json<EmailInfo>,pool:web::Data<PgPool>,mail:web
                     Ok(_)=>{
                         
                 let msg=Message::builder()
-                    .from("okorieonyekachi003@gmail.com".parse().unwrap())
+                    .from(mail_from.as_str().parse().unwrap())
                     .to(email.parse().unwrap())
                     .subject("Sending Code for Password")
                     .body(format!("{}",otp))

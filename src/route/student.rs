@@ -208,8 +208,22 @@ pub async fn login(
             "info": "Please complete the credentials"
         }));
     }
-
-    let result = sqlx::query_as!(
+    let verify=sqlx::query!(
+        "SELECT verified FROM student WHERE email=$1",
+        email
+    ).fetch_one(pool.get_ref())
+    .await;
+match verify{
+    Ok(val)=>{
+        if !val.verified.unwrap(){
+            return HttpResponse::Locked().json(
+                serde_json::json!({
+                    "info":"Please verify Your email"
+                })
+            );
+        }
+        else{
+                let result = sqlx::query_as!(
         Login,
         "SELECT email, password FROM student WHERE email = $1",
         email
@@ -259,27 +273,40 @@ pub async fn login(
                             .max_age(actix_web::cookie::time::Duration::hours(5))
                             .finish();
 
-                        HttpResponse::Ok()
+                         return HttpResponse::Ok()
                             .cookie(cookie)
                             .json(serde_json::json!({
                                 "info": "Proceed to login"
                             }))
                     }
-                    Err(err) => HttpResponse::BadRequest().json(serde_json::json!({
+                    Err(err) => 
+                    return HttpResponse::BadRequest().json(serde_json::json!({
                         "info": format!("Unable to parse password: {}", err)
                     })),
                 }
             } else {
-                HttpResponse::BadRequest().json(serde_json::json!({
+                return HttpResponse::BadRequest().json(serde_json::json!({
                     "info": "Unable to get the data"
                 }))
             }
         }
-        Err(err) => HttpResponse::BadRequest().json(serde_json::json!({
+        Err(err) => 
+        return HttpResponse::BadRequest().json(serde_json::json!({
             "info": format!("{}", err)
         }))
-    }
+        }  
 }
+
+
+    },
+      Err(err)=>{
+        return HttpResponse::BadRequest().json(
+            serde_json::json!({
+                "info":format!("{}",err)
+            })
+        )
+    }
+    }}
 
 pub async fn get_email(form:web::Json<EmailInfo>,pool:web::Data<PgPool>,mail:web::Data<SmtpTransport>,mail_from:web::Data<String>)->impl Responder{
     let info=form.into_inner();
@@ -353,6 +380,11 @@ pub async fn get_email(form:web::Json<EmailInfo>,pool:web::Data<PgPool>,mail:web
     }
 
 }
+
+
+
+
+
 pub async fn forgotten_password(pool:web::Data<PgPool>,query_email:web::Json<EmailInfo>,form:web::Json<ForgottenPassword>)->impl Responder{
 
     let email=&query_email.email;
@@ -455,4 +487,4 @@ pub async fn forgotten_password(pool:web::Data<PgPool>,query_email:web::Json<Ema
         }
     }
 }
-
+ 

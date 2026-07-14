@@ -53,6 +53,8 @@ async fn main() -> std::io::Result<()> {
             .route("/auth/signup",web::post().to(route::student::student_signup))
             .route("/auth/verify/email",web::post().to(route::student::verify_email))
             .route("/auth/login",web::post().to(route::student::login))
+
+            
             .route("/forgottenpassword/get/email", web::get().to(route::student::get_email))
             .route("/forgottenpassword/post/otp",web::post().to(route::student::forgotten_password))
     })

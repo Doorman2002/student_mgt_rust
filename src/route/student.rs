@@ -5,7 +5,7 @@ use crate::Credential;
 use actix_web::cookie::Cookie;
 use actix_web::{web, HttpResponse, Responder};
 use bcrypt::{hash, DEFAULT_COST};
-use chrono;
+use chrono::{self,TimeDelta};
 use lettre::transport::Transport;
 use lettre::{Message, SmtpTransport};
 use rand::{RngExt};
@@ -163,7 +163,7 @@ pub async fn verify_email(
             if let Some(created) = created_at {
                 let now = chrono::Utc::now();
                 let duration = now.signed_duration_since(created);
-                if duration.num_minutes() > 3 {
+                if duration > chrono::TimeDelta::minutes(3){
                     return HttpResponse::BadRequest().json(serde_json::json!({
                         "info": "OTP has expired"
                     }));
@@ -398,7 +398,7 @@ pub async fn forgotten_password(pool:web::Data<PgPool>,query_email:web::Json<Ema
                 let now=chrono::Utc::now();
         
                 let diff_time=now.signed_duration_since(created_time);
-                if diff_time.num_minutes() >5{
+                if diff_time >chrono::TimeDelta::minutes(3){
                     return HttpResponse::Ok().json(
                         serde_json::json!({
                             "info":"Otp expired pls request a new one"

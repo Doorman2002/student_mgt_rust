@@ -4,12 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+
 actix-cors = "0.7.1"
+actix-files = "0.6.10"
 actix-web = "4.14.0"
 bcrypt = "0.19.2"
+cargo-watch = "8.5.3"
 
 chrono = "0.4.45"
-cookie = "0.18.1"
+
 dotenvy = "0.15.7"
 lettre = { version = "0.11.22", default-features = false, features = ["builder", "rustls-tls", "smtp-transport"] }
 lettre_email = "0.9.4"

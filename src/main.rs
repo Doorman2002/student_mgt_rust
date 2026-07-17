@@ -39,7 +39,7 @@ async fn main() -> std::io::Result<()> {
             .allowed_origin("http://localhost:8004")
             .allowed_origin("http://localhost:5173")
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-            .allowed_headers(vec![http::header::ACCEPT, http::header::AUTHORIZATION,http::header::CONTENT_TYPE])
+            .allowed_headers(vec![http::header::ACCEPT, http::header::AUTHORIZATION,http::header::CONTENT_TYPE,http::header::CONTENT_LENGTH])
             .supports_credentials()
             .max_age(3600 * 2);
 
@@ -57,6 +57,8 @@ async fn main() -> std::io::Result<()> {
             
             .route("/forgottenpassword/get/email", web::get().to(route::student::get_email))
             .route("/forgottenpassword/post/otp",web::post().to(route::student::forgotten_password))
+
+            .route("/home",web::get().to(route::home::home_page))
     })
     .bind("127.0.0.1:8004")?
     .run()

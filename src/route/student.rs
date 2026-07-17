@@ -162,7 +162,7 @@ pub async fn verify_email(
 
             if let Some(created) = created_at {
                 let now = chrono::Utc::now();
-                let duration = now - created;
+                let duration = now.signed_duration_since(created);
                 if duration.num_minutes() > 3 {
                     return HttpResponse::BadRequest().json(serde_json::json!({
                         "info": "OTP has expired"
@@ -358,16 +358,7 @@ pub async fn get_email(form:web::Json<EmailInfo>,pool:web::Data<PgPool>,mail:web
                     }
                 }
 
-            // return HttpResponse::Ok().json(
-            //     serde_json::json!({
-            //         "info":"Info sent"
-            //     })
-            // )
-            // return HttpResponse::Found().json(
-            //     serde_json::json!({
-            //         "info":"Email found"
-            //     })
-            // )
+     
 
         },
         Err(err)=>{
@@ -406,7 +397,7 @@ pub async fn forgotten_password(pool:web::Data<PgPool>,query_email:web::Json<Ema
                 let otp=otp.unwrap();
                 let now=chrono::Utc::now();
         
-                let diff_time=now-created_time;
+                let diff_time=now.signed_duration_since(created_time);
                 if diff_time.num_minutes() >5{
                     return HttpResponse::Ok().json(
                         serde_json::json!({

@@ -5,7 +5,7 @@ use crate::Credential;
 use actix_web::cookie::Cookie;
 use actix_web::{web, HttpResponse, Responder};
 use bcrypt::{hash, DEFAULT_COST};
-use chrono::{self,TimeDelta};
+use chrono;
 use lettre::transport::Transport;
 use lettre::{Message, SmtpTransport};
 use rand::{RngExt};
